@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top</title>
+    <link href="{{ url_for('static', path='/base.css') }}" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="center-container">
+      <div class="center">
+        <h1>Top: ({{ page }})</h1>
+        {% for story in stories %}
+          <li>
+            <a>x</a> <a>?</a>
+            <a class="item-link" href="{{ story.url }}">{{ story.title }}</a>
+            <br>
+            <span style="font-size: 7pt">
+              <a href="https://news.ycombinator.com/item?id={{ story.id }}">{{ story.descendants }} comments</a>
+            </span>
+          </li>
+        {% endfor %}
+        <a href="/top/{{ page + 1 }}">More</a>
+      </div>
+    </div>
+  </body>
+</html>

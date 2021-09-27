@@ -1,0 +1,22 @@
+* {
+  background-color: #f6f6ef;
+  color: #828282;
+  font-family: Operator Mono SSm;
+}
+.center-container {
+  display: flex;
+  justify-content: center;
+}
+
+a:visited {
+  color: #828282;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+a:link,
+.item-link {
+  color: #000000;
+}
