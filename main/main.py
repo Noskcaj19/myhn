@@ -3,7 +3,9 @@ from fastapi import FastAPI, Response, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 import httpx
+import urllib.parse
 import asyncio
 from postgres import Postgres
 import os
@@ -16,10 +18,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 async def get_item(id: int, client: httpx.AsyncClient):
-    item = await client.get(
-        f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty"
-    )
-    return {k: v for k, v in item.json().items() if type(v) != list}
+    item = (
+        await client.get(
+            f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty"
+        )
+    ).json()
+    if "url" in item:
+        item["domain"] = urllib.parse.urlsplit(item["url"]).hostname
+    return {k: v for k, v in item.items() if type(v) != list}
 
 
 async def top_items(page: int):
@@ -35,10 +41,54 @@ async def top_items(page: int):
         return await asyncio.gather(*items)
 
 
+@app.get("/dislike/{item}")
+async def redir(item: int):
+    db.run(
+        r"""
+update items set disliked = true where id = %(id)s
+""",
+        {"id": item},
+    )
+    return RedirectResponse("/top")
+
+
+@app.get("/redir/{item}")
+async def redir(item: int):
+    async with httpx.AsyncClient() as client:
+        url = (await get_item(item, client))["url"]
+    db.run(
+        r"""
+update items set read_article = true where id = %(id)s
+""",
+        {"id": item},
+    )
+    return RedirectResponse(url)
+
+
+@app.get("/redir/{item}/comments")
+async def redir_comments(item: int):
+    db.run(
+        r"""
+update items set read_comments = true where id = %(id)s
+""",
+        {"id": item},
+    )
+    return RedirectResponse(f"https://news.ycombinator.com/item?id={item}")
+
+
 @app.get("/top", response_class=HTMLResponse)
 @app.get("/top/{page}", response_class=HTMLResponse)
 async def top(request: Request, page: Optional[int] = 1):
     stories = list(await top_items(page))
+    for item in stories:
+        db.run(
+            r"""
+insert into items values (%(id)s, %(title)s, false, false, false)
+on conflict (id) do nothing
+""",
+            {"id": item["id"], "title": item["title"]},
+        )
+
     return templates.TemplateResponse(
         "top.html.jinja", {"request": request, "stories": stories, "page": page}
     )

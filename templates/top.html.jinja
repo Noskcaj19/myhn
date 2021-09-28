@@ -13,11 +13,15 @@
         <h1>Top: ({{ page }})</h1>
         {% for story in stories %}
           <li>
-            <a>x</a> <a>?</a>
-            <a class="item-link" href="{{ story.url }}">{{ story.title }}</a>
+            <a href="/dislike/{{ story.id }}">x</a> <a href="{{ story.url }}">?</a>
+            {% if (story.url) %}
+              <a class="item-link" href="/redir/{{ story.id }}">{{ story.title }}</a> <span style="font-size: 7pt">({{ story.domain }})</span>
+            {% else %}
+              <a class="item-link" href="/redir/{{ story.id }}/comments">{{ story.title }}</a>
+            {% endif %}
             <br>
             <span style="font-size: 7pt">
-              <a href="https://news.ycombinator.com/item?id={{ story.id }}">{{ story.descendants }} comments</a>
+              <a href="/redir/{{ story.id }}/comments">{{ story.descendants }} comments</a>
             </span>
           </li>
         {% endfor %}
