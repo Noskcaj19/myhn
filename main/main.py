@@ -78,8 +78,12 @@ update items set read_comments = true where id = %(id)s
 
 @app.get("/top", response_class=HTMLResponse)
 @app.get("/top/{page}", response_class=HTMLResponse)
-async def top(request: Request, page: Optional[int] = 1):
-    stories = list(await top_items(page))
+async def top(request: Request, response: Response, page: Optional[int] = 1):
+    try:
+        stories = list(await top_items(page))
+    except httpx.ConnectError:
+        response.code = 500
+        return
     for item in stories:
         db.run(
             r"""
