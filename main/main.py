@@ -87,10 +87,10 @@ async def top(request: Request, response: Response, page: Optional[int] = 1):
     for item in stories:
         db.run(
             r"""
-insert into items values (%(id)s, %(title)s, false, false, false)
+insert into items values (%(id)s, %(title)s, %(url)s, false, false, false)
 on conflict (id) do nothing
 """,
-            {"id": item["id"], "title": item["title"]},
+            {"id": item["id"], "title": item["title"], "url": item.get("url")},
         )
 
     return templates.TemplateResponse(
